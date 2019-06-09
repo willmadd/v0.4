@@ -75,15 +75,10 @@ class PnrController extends Controller
                     $bookingCabin = null;
                 }
                 $aircraft = $this->getAircraft($pnrLine);
-                // echo '>>>>>'.$aircraft;
-
 
                 if ($aircraft){
-                    // echo 'aircraft detected';
                     $aircraftQuery = DB::table('aircraft')->select('aircraft')->where('iatacode', $aircraft)->first();
-                    // print_r($aircraftQuery);
-                    // if (count($aircraftQuery)){
-                    if ($aircraftQuery->count()){
+                    if (count($aircraftQuery)){
                         $aircraft = $aircraftQuery->aircraft;
                     }else{
                         $aircraft = null;
