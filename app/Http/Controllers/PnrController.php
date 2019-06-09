@@ -207,6 +207,19 @@ class PnrController extends Controller
             //if two dates found in the format 02OCT then assign one to arrival date
             if(count($datematches[0])>=2){
                 $arrival_date = $datematches[0][1];
+
+                $futureArrDate =  $arrival_date." ".date('Y', strtotime('+1 year', strtotime($arrival_date)));
+                $today = strtotime('today UTC');
+                $today = date('Y-m-d', strtotime('today UTC'));
+                $datetime2 = date_create($futureArrDate);
+                $datetime1 = date_create($today);
+                $interval = date_diff($datetime1, $datetime2);
+                if(($interval->y)>0){
+                $arrival_date = date('Y-m-d', strtotime('-1 year', strtotime($futureArrDate)));
+                }else{
+                    $arrival_date = date('Y-m-d', strtotime($futureArrDate));
+                }
+
             }
 
             preg_match_all('/[0-9]{3,4}(A|P|N)|(\b[0-9]{4}\b)|(\b[0-9]{2}:[0-9]{2}\b)/', substr($flightLine, 10, 70), $timematches, PREG_SET_ORDER);
@@ -258,7 +271,9 @@ if(preg_match('/[0-9]{3,4}(A|P|N)/', $arrival_time)){
                 }
                 
                         //start with the assumption that the  flight lands on the same day as it departs
-        $arrival_date = $departure_date;
+                        if (!$arrival_date){
+                            $arrival_date = $departure_date;
+                        }
 
             $departure_time = Array (
             'string' => date('Y-m-d H:i', strtotime($departure_time . ' ' . $departure_date)),
