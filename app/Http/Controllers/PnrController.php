@@ -195,68 +195,59 @@ class PnrController extends Controller
     protected function getTimeAndDate($flightLine)
     {
         $timings = array();
-        $departure_date;
-        $arrival_date;
+        $departure_date = null;
+        $arrival_date = null;
         preg_match_all('/[0-9]+((JAN)|(FEB)|(MAR)|(APR)|(MAY)|(JUN)|(JUL)|(AUG)|(SEP)|(OCT)|(NOV)|(DEC))/', $flightLine, $datematches);
         if($datematches){
             // print_r($datematches);
             $departure_date = $datematches[0][0];
 
+                //if two dates found in the format 02OCT then assign one to arrival date
+                if(count($datematches[0])>=2){
+                    $arrival_date = $datematches[0][1];
 
+                    $futureArrDate =  $arrival_date." ".date('Y', strtotime('+1 year', strtotime($arrival_date)));
+                    $today = strtotime('today UTC');
+                    $today = date('Y-m-d', strtotime('today UTC'));
+                    $datetime2 = date_create($futureArrDate);
+                    $datetime1 = date_create($today);
+                    $interval = date_diff($datetime1, $datetime2);
+                    if(($interval->y)>0){
+                    $arrival_date = date('Y-m-d', strtotime('-1 year', strtotime($futureArrDate)));
+                    }else{
+                        $arrival_date = date('Y-m-d', strtotime($futureArrDate));
+                    }
 
-            //if two dates found in the format 02OCT then assign one to arrival date
-            if(count($datematches[0])>=2){
-                $arrival_date = $datematches[0][1];
-
-                $futureArrDate =  $arrival_date." ".date('Y', strtotime('+1 year', strtotime($arrival_date)));
-                $today = strtotime('today UTC');
-                $today = date('Y-m-d', strtotime('today UTC'));
-                $datetime2 = date_create($futureArrDate);
-                $datetime1 = date_create($today);
-                $interval = date_diff($datetime1, $datetime2);
-                if(($interval->y)>0){
-                $arrival_date = date('Y-m-d', strtotime('-1 year', strtotime($futureArrDate)));
-                }else{
-                    $arrival_date = date('Y-m-d', strtotime($futureArrDate));
                 }
 
-            }
-
-            preg_match_all('/[0-9]{3,4}(A|P|N)|(\b[0-9]{4}\b)|(\b[0-9]{2}:[0-9]{2}\b)/', substr($flightLine, 10, 70), $timematches, PREG_SET_ORDER);
-        
-            // print_r($timematches);
-
-            // if ($timematches[2][0]) {
-            //     array_splice($timematches, 0, 1);
-            // }
-        
-            $departure_time = $timematches[0][0];
-            $arrival_time = $timematches[1][0];
+                preg_match_all('/[0-9]{3,4}(A|P|N)|(\b[0-9]{4}\b)|(\b[0-9]{2}:[0-9]{2}\b)/', substr($flightLine, 10, 70), $timematches, PREG_SET_ORDER);
             
-// echo $departure_time;
+                // print_r($timematches);
 
+                // if ($timematches[2][0]) {
+                //     array_splice($timematches, 0, 1);
+                // }
+            
+                $departure_time = $timematches[0][0];
+                $arrival_time = $timematches[1][0];
+            
+                if(preg_match('/[0-9]{3,4}(A|P|N)/', $departure_time)){
+                    $departure_time = substr_replace($departure_time, ':', -3, 0);
+                }else{
+                    $departure_time = substr_replace($departure_time, ':', 2, 0);
+                }
 
-if(preg_match('/[0-9]{3,4}(A|P|N)/', $departure_time)){
-    $departure_time = substr_replace($departure_time, ':', -3, 0);
-}else{
-    $departure_time = substr_replace($departure_time, ':', 2, 0);
-}
+                $departure_time = str_replace("A", "am", $departure_time);
+                $departure_time = str_replace("P", "pm", $departure_time);
 
-$departure_time = str_replace("A", "am", $departure_time);
-$departure_time = str_replace("P", "pm", $departure_time);
-
-
-
-if(preg_match('/[0-9]{3,4}(A|P|N)/', $arrival_time)){
-    $arrival_time = substr_replace($arrival_time, ':', -3, 0);
-}else{
-    $arrival_time = substr_replace($arrival_time, ':', 2, 0);
-}
-
+                if(preg_match('/[0-9]{3,4}(A|P|N)/', $arrival_time)){
+                    $arrival_time = substr_replace($arrival_time, ':', -3, 0);
+                }else{
+                    $arrival_time = substr_replace($arrival_time, ':', 2, 0);
+                }
 
                 $arrival_time = str_replace("A", "am", $arrival_time);
                 $arrival_time = str_replace("P", "pm", $arrival_time);
-            
 
                 $futureDate =  $departure_date." ".date('Y', strtotime('+1 year', strtotime($departure_date)));
                 $today = strtotime('today UTC');
@@ -270,10 +261,10 @@ if(preg_match('/[0-9]{3,4}(A|P|N)/', $arrival_time)){
                     $departure_date = date('Y-m-d', strtotime($futureDate));
                 }
                 
-                        //start with the assumption that the  flight lands on the same day as it departs
-                        if (!$arrival_date){
-                            $arrival_date = $departure_date;
-                        }
+                //start with the assumption that the  flight lands on the same day as it departs
+                if (!$arrival_date){
+                    $arrival_date = $departure_date;
+                }
 
             $departure_time = Array (
             'string' => date('Y-m-d H:i', strtotime($departure_time . ' ' . $departure_date)),
