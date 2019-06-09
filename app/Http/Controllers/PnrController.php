@@ -79,9 +79,9 @@ class PnrController extends Controller
 
 
                 if ($aircraft){
-                    // echo 'aircraft detected';
+                    echo 'aircraft detected';
                     $aircraftQuery = DB::table('aircraft')->select('aircraft')->where('iatacode', $aircraft)->first();
-                    // print_r($aircraftQuery);
+                    print_r($aircraftQuery);
                     if (count($aircraftQuery)){
                         $aircraft = $aircraftQuery->aircraft;
                     }else{
