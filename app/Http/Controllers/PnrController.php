@@ -81,11 +81,11 @@ class PnrController extends Controller
                 if ($aircraft){
                     $aircraftQuery = DB::table('aircraft')->select('aircraft')->where('iatacode', $aircraft)->first();
                     print_r($aircraftQuery);
-                    if (count($aircraftQuery)){
-                        $aircraft = $aircraftQuery->aircraft;
-                    }else{
-                        $aircraft = null;
-                    }
+                    // if (count($aircraftQuery)){
+                    //     $aircraft = $aircraftQuery->aircraft;
+                    // }else{
+                    //     $aircraft = null;
+                    // }
                 }
 
                 $times = $this->getTimeAndDate($pnrLine);
