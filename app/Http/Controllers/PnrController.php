@@ -75,18 +75,18 @@ class PnrController extends Controller
                     $bookingCabin = null;
                 }
                 $aircraft = $this->getAircraft($pnrLine);
-                echo '>>>>>'.$aircraft;
+                // echo '>>>>>'.$aircraft;
 
 
                 if ($aircraft){
-                    echo 'aircraft detected';
+                    // echo 'aircraft detected';
                     $aircraftQuery = DB::table('aircraft')->select('aircraft')->where('iatacode', $aircraft)->first();
-                    print_r($aircraftQuery);
-                    // if (count($aircraftQuery)){
-                    //     $aircraft = $aircraftQuery->aircraft;
-                    // }else{
-                    //     $aircraft = null;
-                    // }
+                    // print_r($aircraftQuery);
+                    if (count($aircraftQuery)){
+                        $aircraft = $aircraftQuery->aircraft;
+                    }else{
+                        $aircraft = null;
+                    }
                 }
 
                 $times = $this->getTimeAndDate($pnrLine);
