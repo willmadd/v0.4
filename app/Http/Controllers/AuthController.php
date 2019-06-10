@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use App\User;
 use App\Notifications\SignupActivate;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
@@ -135,6 +136,20 @@ class AuthController extends Controller
         $user->activation_token = '';
         $user->save();
         return $user;
+    }
+
+    public function update(Request $request)
+    {
+        $user = $request->post('data');
+
+        DB::table('users')
+->where('id', $user['id'])
+->update(['api' => $user['api']]);
+
+        return response()->json([
+            'api requested' => $user['api'],
+            'user id' => $user['id'],
+            ]);
     }
 
 }

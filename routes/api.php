@@ -25,5 +25,6 @@ Route::group([
     ], function() {
         Route::get('logout', 'AuthController@logout');
         Route::get('user', 'AuthController@user');
+        Route::put('update', 'AuthController@update');
     });
 });
