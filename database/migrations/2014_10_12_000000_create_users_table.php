@@ -32,6 +32,7 @@ class CreateUsersTable extends Migration
             $table->string('signup_day');
             $table->string('signup_month');
             $table->string('signup_year');
+            $table->string('access');
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();

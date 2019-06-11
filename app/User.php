@@ -21,7 +21,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'iatacode', 'address_1', 'address_2', 'city','password', 'agencyname', 'phone', 'api', 'country', 'active', 'activation_token', 'signup_day', 'signup_month', 'signup_year'
+        'name', 'email', 'iatacode', 'address_1', 'address_2', 'city','password', 'agencyname', 'phone', 'api', 'country', 'active', 'activation_token', 'signup_day', 'signup_month', 'signup_year', 'access'
     ];
 
     /**
@@ -30,7 +30,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $hidden = [
-        'password', 'remember_token', 'activation_token',
+        'password', 'remember_token', 'activation_token', 'access',
     ];
 
     /**

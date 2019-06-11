@@ -49,6 +49,7 @@ class AuthController extends Controller
             'signup_day' => $request->signupdateday,
             'signup_month' => $request->signupdatemonth,
             'signup_year' => $request->signupdateyear,
+            'access'=>str_random(20),
             
         ]);
         $user->save();
@@ -140,16 +141,19 @@ class AuthController extends Controller
 
     public function update(Request $request)
     {
-        $user = $request->post('data');
-
+        $user = $request->post('user');
         DB::table('users')
-->where('id', $user['id'])
-->update(['api' => $user['api']]);
+        ->where('id', $user['id'])
+        ->update(['api' => $user['api']]);
 
         return response()->json([
-            'api requested' => $user['api'],
-            'user id' => $user['id'],
-            ]);
+            'user' => $user,
+        ]);
     }
 
+    public function gettoken($id)
+    {
+        $token = DB::table('users')->where('id', $id)->value('access');
+        return $token;
+    }
 }
