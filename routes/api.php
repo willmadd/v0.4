@@ -3,12 +3,11 @@
 use Illuminate\Http\Request;
 
 Route::group([], function(){
+    Route::post('/', 'PnrApiController@convertPnr');
     Route::get('blog', 'BlogController@getArticles');
     Route::get('blog/{slug}', 'BlogController@getArticleBySlug');
 
     Route::post('write-file', 'LogController@logUserInput');
-//still need to do the above
-
     Route::post('convert', 'PnrController@convertPnr');
 
 });

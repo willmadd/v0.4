@@ -23,9 +23,9 @@ class AuthController extends Controller
         $request->validate([
             'contactperson' => 'required|string',
             'agencyname' => 'required|string',
-            'iatacode' => 'string',
+            'iatacode' => 'string|nullable',
             'addressone' => 'required|string',
-            'addresstwo' => 'string',
+            'addresstwo' => 'string|nullable',
             'city' => 'required|string',
             'country' => 'required|string',
             'email' => 'required|string|email|unique:users',
@@ -33,6 +33,7 @@ class AuthController extends Controller
             'phone' => 'required|string',
             'apiOption' => 'required|string',
         ]);
+
         $user = new User([
             'name' => $request->contactperson,
             'agencyname' => $request->agencyname,
@@ -49,7 +50,7 @@ class AuthController extends Controller
             'signup_day' => $request->signupdateday,
             'signup_month' => $request->signupdatemonth,
             'signup_year' => $request->signupdateyear,
-            'access'=>str_random(20),
+            'access'=>str_random(35),
             
         ]);
         $user->save();

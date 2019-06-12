@@ -47,7 +47,7 @@ class PnrApiController extends Controller
 
 
             if($operatedBy){
-                $finalOutput['flights'][$i-1]['flight']['operated_by'] = $operatedBy;
+                $finalOutput['flights'][$i-1]['flt']['operated_by'] = $operatedBy;
                 $operatedBy = null;
             }
 
@@ -74,21 +74,32 @@ class PnrApiController extends Controller
                 }else{
                     $bookingCabin = null;
                 }
+                $aircraft = $this->getAircraft($pnrLine);
+
+                if ($aircraft){
+                    $aircraftQuery = DB::table('aircraft')->select('aircraft')->where('iatacode', $aircraft)->first();
+                    if (count($aircraftQuery)){
+                        $aircraft = $aircraftQuery->aircraft;
+                    }else{
+                        $aircraft = null;
+                    }
+                }
 
                 $times = $this->getTimeAndDate($pnrLine);
                 $arrivalDateTime = $times['arrival'];
                 $departureDateTime = $times['departure'];
                 
                 $flightLineOutput= Array(
-                    'line_no' => $i,
                     'flightNo' => $this->getFlightNo($pnrLine),
                     'iatacode'=>$iatacode,
                     "name" => $airlineQuery->airline_name,
                     "operated_by"=>$airlineQuery->airline_name,
                     'cabin'=>  $bookingCabin,
                     "class" => $bookingClass,
+                    "aircraft"=>$aircraft,
                     "departure" => $departureDateTime,
                     "arrival" => $arrivalDateTime,
+                    "transit_time" => (object) array(),
                     "duration" => $this->getFlightDuration($departureDateTime['string'], $departureAirportQuery->timezone, $arrivalDateTime['string'], $arrivalAirportQuery->timezone),
                     "distance" => $this->getFlightDistance($departureAirportQuery->longitude, $departureAirportQuery->latitude, $arrivalAirportQuery->longitude, $arrivalAirportQuery->latitude),
                     "svg-logo-high-res" => "https://www.pnrconverter.com/images/airlines/".strtolower($iatacode).".svg",
@@ -97,9 +108,9 @@ class PnrApiController extends Controller
 
     
                 $flight_entry = array(
-                    "departurearport" => $departureAirportQuery,
-                    "arrivalarport" => $arrivalAirportQuery,
-                    "flight" => $flightLineOutput,
+                    "dep" => $departureAirportQuery,
+                    "arr" => $arrivalAirportQuery,
+                    "flt" => $flightLineOutput,
                 );
     
                 array_push($finalOutput['flights'], $flight_entry);
@@ -107,8 +118,29 @@ class PnrApiController extends Controller
             }
 
         }
+        $j = 0;
+        foreach($finalOutput['flights'] as $flight)
+        {
+            if($j+1 < count($finalOutput['flights'])){
+                $currentFlightArrivalTime = $flight['flt']['arrival']['string'];
+                $nextFlightDepartureTime = $finalOutput['flights'][$j+1]['flt']['departure']['string'];
+                $datetime1 = new DateTime($currentFlightArrivalTime);
+                $datetime2 = new DateTime($nextFlightDepartureTime);
+                $transitInterval = $datetime1->diff($datetime2);
+                
+                // print_r( $transitInterval->i );
 
+                $transitTime = array(
+                    "minutes" => ($transitInterval->i),
+                    "hours" => ($transitInterval->h),
+                    "days" => ($transitInterval->d),
+                    "months" => ($transitInterval->m),
+                );
+                $finalOutput['flights'][$j]['flt']['transit_time'] = $transitTime;
+            }
 
+            $j++;
+        }
 
         return response()->json([
             'flightData' => $finalOutput
@@ -161,32 +193,59 @@ class PnrApiController extends Controller
     protected function getTimeAndDate($flightLine)
     {
         $timings = array();
-        $departure_date;
-        $arrival_date;
+        $departure_date = null;
+        $arrival_date = null;
         preg_match_all('/[0-9]+((JAN)|(FEB)|(MAR)|(APR)|(MAY)|(JUN)|(JUL)|(AUG)|(SEP)|(OCT)|(NOV)|(DEC))/', $flightLine, $datematches);
         if($datematches){
             // print_r($datematches);
             $departure_date = $datematches[0][0];
 
-            preg_match_all('/[0-9]{3,4}(A|P|N)|(\b[0-9]{4}\b)|(\b[0-9]{2}:[0-9]{2}\b)/', substr($flightLine, 10, 70), $timematches, PREG_SET_ORDER);
-        
-            // print_r($timematches);
+                //if two dates found in the format 02OCT then assign one to arrival date
+                if(count($datematches[0])>=2){
+                    $arrival_date = $datematches[0][1];
 
-            // if ($timematches[2][0]) {
-            //     array_splice($timematches, 0, 1);
-            // }
-        
-            $departure_time = $timematches[0][0];
-            $arrival_time = $timematches[1][0];
+                    $futureArrDate =  $arrival_date." ".date('Y', strtotime('+1 year', strtotime($arrival_date)));
+                    $today = strtotime('today UTC');
+                    $today = date('Y-m-d', strtotime('today UTC'));
+                    $datetime2 = date_create($futureArrDate);
+                    $datetime1 = date_create($today);
+                    $interval = date_diff($datetime1, $datetime2);
+                    if(($interval->y)>0){
+                    $arrival_date = date('Y-m-d', strtotime('-1 year', strtotime($futureArrDate)));
+                    }else{
+                        $arrival_date = date('Y-m-d', strtotime($futureArrDate));
+                    }
+
+                }
+
+                preg_match_all('/[0-9]{3,4}(A|P|N)|(\b[0-9]{4}\b)|(\b[0-9]{2}:[0-9]{2}\b)/', substr($flightLine, 10, 70), $timematches, PREG_SET_ORDER);
             
-                $departure_time = substr_replace($departure_time, ':', 2, 0);
+                // print_r($timematches);
+
+                // if ($timematches[2][0]) {
+                //     array_splice($timematches, 0, 1);
+                // }
+            
+                $departure_time = $timematches[0][0];
+                $arrival_time = $timematches[1][0];
+            
+                if(preg_match('/[0-9]{3,4}(A|P|N)/', $departure_time)){
+                    $departure_time = substr_replace($departure_time, ':', -3, 0);
+                }else{
+                    $departure_time = substr_replace($departure_time, ':', 2, 0);
+                }
+
                 $departure_time = str_replace("A", "am", $departure_time);
                 $departure_time = str_replace("P", "pm", $departure_time);
-            
-                $arrival_time = substr_replace($arrival_time, ':', 2, 0);
+
+                if(preg_match('/[0-9]{3,4}(A|P|N)/', $arrival_time)){
+                    $arrival_time = substr_replace($arrival_time, ':', -3, 0);
+                }else{
+                    $arrival_time = substr_replace($arrival_time, ':', 2, 0);
+                }
+
                 $arrival_time = str_replace("A", "am", $arrival_time);
                 $arrival_time = str_replace("P", "pm", $arrival_time);
-            
 
                 $futureDate =  $departure_date." ".date('Y', strtotime('+1 year', strtotime($departure_date)));
                 $today = strtotime('today UTC');
@@ -194,12 +253,16 @@ class PnrApiController extends Controller
                 $datetime2 = date_create($futureDate);
                 $datetime1 = date_create($today);
                 $interval = date_diff($datetime1, $datetime2);
-                if(($interval->format('%y'))>0){
+                if(($interval->y)>0){
                 $departure_date = date('Y-m-d', strtotime('-1 year', strtotime($futureDate)));
                 }else{
                     $departure_date = date('Y-m-d', strtotime($futureDate));
                 }
                 
+                //start with the assumption that the  flight lands on the same day as it departs
+                if (!$arrival_date){
+                    $arrival_date = $departure_date;
+                }
 
             $departure_time = Array (
             'string' => date('Y-m-d H:i', strtotime($departure_time . ' ' . $departure_date)),
@@ -211,14 +274,13 @@ class PnrApiController extends Controller
         // set arrival date
         
         $arrival_date_set_check = false;
-        //start with the assumption that the  flight lands on the same day as it departs
-        $arrival_date = $departure_date;
+
         
         if ((preg_match('/\#[0-9]{4}/', $flightLine)) || (preg_match('/[0-9]{3,4}(A|N|P)\+1/', $flightLine))|| (preg_match('/[0-9]{4}\s[0-9]{4}\*/', $flightLine))|| (preg_match('/[0-9]{4}\s[0-9]{4}\+1/', $flightLine))|| (preg_match('/[0-9]{3,4}(A|N|P)\#1/', $flightLine))) {
             $arrival_date = date('d M Y', strtotime($departure_date . ' +1 days'));
             }
         
-            if ((preg_match('/\*[0-9]{4}\s/', $flightLine)) || (preg_match('/[0-9]{3,4}(A|N|P)\+2/', $flightLine))) {
+            if ((preg_match('/\*[0-9]{4}\s/', $flightLine)) || (preg_match('/[0-9]{3,4}(A|N|P)\+2/', $flightLine))|| (preg_match('/[0-9]{4}\+2/', $flightLine))) {
                 $arrival_date = date('d M Y', strtotime($departure_date . ' +2 days'));
             }
         
@@ -344,6 +406,17 @@ class PnrApiController extends Controller
         if(preg_match('/OPERATED BY\s/', $flightLine)){
             $arr = explode('OPERATED BY', $flightLine);
             return ltrim(ucwords(strtolower($arr[1])));
+        }else{
+            return null;
+        }
+      }
+
+      protected function getAircraft($flightLine){
+        $endOfLine = substr($flightLine, -9);
+        if(preg_match('/\b\w{3}\b/', $endOfLine)){
+            preg_match('/\b\w{3}\b/', $endOfLine, $matches);
+            // echo $matches[0];
+            return $matches[0];
         }else{
             return null;
         }
