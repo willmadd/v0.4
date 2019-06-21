@@ -162,6 +162,8 @@ return [
         Illuminate\Validation\ValidationServiceProvider::class,
         Illuminate\View\ViewServiceProvider::class,
         Barryvdh\Cors\ServiceProvider::class,
+        Laravel\Cashier\CashierServiceProvider::class,
+
         // Laravel\Passport\PassportServiceProvider::class,
 
         /*

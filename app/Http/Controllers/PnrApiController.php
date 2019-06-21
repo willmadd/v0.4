@@ -6,10 +6,40 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use DateTime;
 use DateTimeZone;
+use App\User;
+
 
 class PnrApiController extends Controller
 {
-    public function convertPnr(Request $request)
+    public function apiAuth (Request $request){
+        $privateKey = $request->header('private_app_key');
+        $publicKey = $request->header('public_app_key');
+
+        $user = User::where('access', $privateKey )->first();
+        $hash = hash('sha256', $user['id']."pnrc");
+
+        if(is_null($user)){
+            return response()->json([
+                'message' => 'unauthorised',
+            ], 401);
+        }elseif($hash !== $publicKey){
+            return response()->json([
+                'message' => 'unauthorised',
+            ], 401);
+        }elseif($user['requests']>=$user['limit']){
+            return response()->json([
+                'message' => 'Request Limit Reached',
+            ], 401);
+        }else{
+            // $user = $request->post('user');
+            DB::table('users')
+            ->where('id', $user['id'])
+            ->increment('requests');
+            return $this->convertPnr($request, $user);
+        };
+    }
+
+    private function convertPnr(Request $request, $user)
     {
         //get pnr post field
         $pnr = $request->post('pnr');
@@ -28,6 +58,10 @@ class PnrApiController extends Controller
         
         //define final output as an array
         $finalOutput = Array();
+        $finalOutput['info'] = Array([
+            'agencyName' => $user['agencyname'],
+            'requestsLeft' => $user['limit']-$user['requests'],
+        ]);
         $finalOutput['names'] = Array();
         $finalOutput['flights'] = Array();
 

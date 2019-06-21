@@ -34,9 +34,17 @@ class CreateUsersTable extends Migration
             $table->string('signup_month');
             $table->string('signup_year');
             $table->string('access');
+            $table->integer('requests')->default(0);
+            $table->integer('limit')->default(0);
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes();
+//braintree fields
+            $table->string('braintree_id')->nullable();
+            $table->string('paypal_email')->nullable();
+            $table->string('card_brand')->nullable();
+            $table->string('card_last_four')->nullable();
+            $table->timestamp('trial_ends_at')->nullable();
         });
     }
 
