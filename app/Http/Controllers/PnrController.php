@@ -12,7 +12,7 @@ class PnrController extends Controller
     public function convertPnr(Request $request)
     {
         $host = parse_url(request()->headers->get('referer'), PHP_URL_HOST);
-        if ($host !== "www.pnrdev.com" || $host !== "pnrdev.com" || $host !== "www.pnrconverter.com" || $host !== "pnrconverter.com"|| $host !=="locahost"){
+        if ($host !== "www.pnrdev.com" && $host !== "pnrdev.com" && $host !== "www.pnrconverter.com" && $host !== "pnrconverter.com"&& $host !=="locahost"){
             return response()->json([
                 'message' => 'unauthorised request'
             ], 401);
