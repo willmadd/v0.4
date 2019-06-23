@@ -12,10 +12,10 @@ class PnrController extends Controller
     public function convertPnr(Request $request)
     {
         $host = parse_url(request()->headers->get('referer'), PHP_URL_HOST);
-        if ($host !== "www.pnrdev.com" && $host !== "pnrdev.com" && $host !== "www.pnrconverter.com" && $host !== "pnrconverter.com"&& $host !=="locahost"){
+        if ($host !== "www.pnrdev.com" && $host !== "pnrdev.com" && $host !== "www.pnrconverter.com" && $host !== "pnrconverter.com"&& $host !=="localhost"){
             return response()->json([
                 'message' => 'unauthorised request'
-            ], 401);
+            ], 403);
         }
 
         //get pnr post field
@@ -35,7 +35,6 @@ class PnrController extends Controller
         $finalOutput = Array();
         $finalOutput['names'] = Array();
         $finalOutput['flights'] = Array();
-        $finalOutput['host'] = $host;
 
 
         $i = 0;
@@ -74,7 +73,7 @@ class PnrController extends Controller
             $departure = $departureAirportCode["departing_from"];
             $arrival = $departureAirportCode["arriving_at"];
 
-            if($bookingClass&&$departureAirportCode&&$departure&&$arrival&&!$names&&!$operatedBy&&preg_match('#[0-9]#',substr($pnrLine, 0, 6))===1){
+            if($bookingClass&&$departureAirportCode&&$departure&&$arrival&&!$names&&!$operatedBy&&preg_match('#[0-9]#',substr($pnrLine, 0, 6))===1 && preg_match('#[0-9]{5}#',$pnrLine)!==1){
                 
                 $departureAirportQuery = DB::table('airportdata')->select('airportname','cityname', 'countryname', 'airportcode', 'latitude', 'longitude', 'timezone')->where('airportcode', $departure)->first();
                 $arrivalAirportQuery = DB::table('airportdata')->select('airportname','cityname', 'countryname', 'airportcode', 'latitude', 'longitude', 'timezone')->where('airportcode', $arrival)->first();
@@ -286,7 +285,7 @@ class PnrController extends Controller
         $arrival_date_set_check = false;
 
         
-        if ((preg_match('/\#[0-9]{4}/', $flightLine)) || (preg_match('/[0-9]{3,4}(A|N|P)\+1/', $flightLine))|| (preg_match('/[0-9]{4}\s[0-9]{4}\*/', $flightLine))|| (preg_match('/[0-9]{4}\s[0-9]{4}\+1/', $flightLine))|| (preg_match('/[0-9]{3,4}(A|N|P)\#1/', $flightLine))|| (preg_match('/\s\*[0-9]{4}\s/', $flightLine))|| (preg_match('/[0-9]{4}\s\#\s/', $flightLine))) {
+        if ((preg_match('/\#[0-9]{4}/', $flightLine)) || (preg_match('/[0-9]{3,4}(A|N|P)\+1/', $flightLine))|| (preg_match('/[0-9]{4}\s[0-9]{4}\*/', $flightLine))|| (preg_match('/[0-9]{4}\s[0-9]{4}\+1/', $flightLine))|| (preg_match('/[0-9]{3,4}(A|N|P)\#1/', $flightLine))|| (preg_match('/\s\*[0-9]{4}\s/', $flightLine))|| (preg_match('/[0-9]{4}\s\#\s/', $flightLine)) || (preg_match('/[0-9]{4}\s\#[1]/', $flightLine))) {
             $arrival_date = date('d M Y', strtotime($departure_date . ' +1 days'));
             }
         

@@ -19,7 +19,7 @@ class PlanController extends Controller
     public function planbyslug($slug)
     {
 
-        $plan = DB::table('plans')->where('name', $slug)->first();
+        $plan = DB::table('plans')->where('id', $slug)->first();
 
         return response()->json([
             'plan' => $plan

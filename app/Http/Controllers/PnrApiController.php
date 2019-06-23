@@ -44,14 +44,12 @@ class PnrApiController extends Controller
         //get pnr post field
         $pnr = $request->post('pnr');
         //replace special characters
-        $pnr = str_replace(['Â', '$', '.#', '*', '.'], " ", $pnr);
+        $pnr = str_replace(['Â', '$', '.#', '.'], " ", $pnr);
         $pnr = trim(preg_replace("~\s*\R\s*~", "\n", $pnr));
-        //replace tabs and multiple spaces with single space
-        $pnr = preg_replace('/\h+/', ' ', $pnr);
         //replace double linebreaks with single line breaks
         $pnr = str_replace("\r\n\r\n","\r\n",$pnr);
 
-        
+
         $pnr = explode("\n", $pnr);
 
 
@@ -69,6 +67,11 @@ class PnrApiController extends Controller
         $i = 0;
         foreach($pnr as $pnrLine)
         {
+            //remove any * that appear before position 20 in a pnr
+            $pnrLine = str_replace('*', " ", substr($pnrLine, 0,20)).substr($pnrLine, 20);
+            //condense spaces and tabs to single space
+            $pnrLine = preg_replace('/\h+/', ' ', $pnrLine);
+            
             //find names
             $names = $this->getNames($pnrLine);
 
@@ -85,6 +88,7 @@ class PnrApiController extends Controller
                 $operatedBy = null;
             }
 
+
             //remove preceeding line numbers
             $pnrLine = preg_replace('/^[0-9]+\s/', '', $pnrLine);
             //get iatacode
@@ -98,7 +102,7 @@ class PnrApiController extends Controller
             $departure = $departureAirportCode["departing_from"];
             $arrival = $departureAirportCode["arriving_at"];
 
-            if($bookingClass&&$departureAirportCode&&$departure&&$arrival&&!$names&&!$operatedBy){
+            if($bookingClass&&$departureAirportCode&&$departure&&$arrival&&!$names&&!$operatedBy&&preg_match('#[0-9]#',substr($pnrLine, 0, 6))===1){
                 
                 $departureAirportQuery = DB::table('airportdata')->select('airportname','cityname', 'countryname', 'airportcode', 'latitude', 'longitude', 'timezone')->where('airportcode', $departure)->first();
                 $arrivalAirportQuery = DB::table('airportdata')->select('airportname','cityname', 'countryname', 'airportcode', 'latitude', 'longitude', 'timezone')->where('airportcode', $arrival)->first();
@@ -310,7 +314,7 @@ class PnrApiController extends Controller
         $arrival_date_set_check = false;
 
         
-        if ((preg_match('/\#[0-9]{4}/', $flightLine)) || (preg_match('/[0-9]{3,4}(A|N|P)\+1/', $flightLine))|| (preg_match('/[0-9]{4}\s[0-9]{4}\*/', $flightLine))|| (preg_match('/[0-9]{4}\s[0-9]{4}\+1/', $flightLine))|| (preg_match('/[0-9]{3,4}(A|N|P)\#1/', $flightLine))) {
+        if ((preg_match('/\#[0-9]{4}/', $flightLine)) || (preg_match('/[0-9]{3,4}(A|N|P)\+1/', $flightLine))|| (preg_match('/[0-9]{4}\s[0-9]{4}\*/', $flightLine))|| (preg_match('/[0-9]{4}\s[0-9]{4}\+1/', $flightLine))|| (preg_match('/[0-9]{3,4}(A|N|P)\#1/', $flightLine))|| (preg_match('/\s\*[0-9]{4}\s/', $flightLine))|| (preg_match('/[0-9]{4}\s\#\s/', $flightLine))|| (preg_match('/[0-9]{4}\s\#[1]/', $flightLine))) {
             $arrival_date = date('d M Y', strtotime($departure_date . ' +1 days'));
             }
         
