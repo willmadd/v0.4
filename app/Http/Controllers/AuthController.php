@@ -143,12 +143,26 @@ class AuthController extends Controller
     public function update(Request $request)
     {
         $user = $request->post('user');
-        DB::table('users')
-        ->where('id', $user['id'])
-        ->update(['api' => $user['api']]);
+
+        $existingPlan = DB::table('users')->where('id', $user['id'])->value('api');
+
+        if ($existingPlan !== $user['api']){
+
+            $newPlanLimit =  DB::table('plans')->where('id', $user['api'])->value('monthly_limit');
+
+            DB::table('users')
+            ->where('id', $user['id'])
+            ->update(['api' => $user['api'], 'limit'=>$newPlanLimit]);
+
+                $user = DB::table('users')->where('id', $user['id'])->first();
+
+        }
+
+
 
         return response()->json([
             'user' => $user,
+            'existingapi' => $existingPlan,
         ]);
     }
 
