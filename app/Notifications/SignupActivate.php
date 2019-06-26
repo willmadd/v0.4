@@ -44,9 +44,9 @@ class SignupActivate extends Notification
         $url = 'https://www.pnrconverter.com/signup/activate/'.$notifiable->activation_token;
         return (new MailMessage)
             ->subject('Confirm your PNR Converter account')
-            ->line('Thanks for signing up to PNR Converter! Please before you begin, you must confirm your account.')
+            ->line('Thanks for signing up to PNR Converter! Please click the button below to activate your account')
             ->action('Confirm Account', url($url))
-            ->line('Thank you for using our application!');
+            ->line('Thank you for using PNR Converter!');
     }
     
 
