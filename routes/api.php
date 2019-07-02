@@ -24,6 +24,8 @@ Route::group([
     Route::get('signup/activate/{token}', 'AuthController@signupActivate');
     Route::post('/subscription', 'SubscriptionController@create');
     Route::post('/cancelsubscription', 'SubscriptionController@cancel');
+    Route::post('/updatesubscription', 'SubscriptionController@update');
+    Route::get('plans', 'PlanController@index');
     
     Route::group([
         'middleware' => 'auth:api'
@@ -31,8 +33,8 @@ Route::group([
         Route::get('logout', 'AuthController@logout');
         Route::get('user', 'AuthController@user');
         Route::put('update', 'AuthController@update');
+        Route::put('updatealluserdetails', 'AuthController@updateAllUserDetails');
         Route::get('gettoken/{id}', 'AuthController@gettoken');
-        Route::get('plans', 'PlanController@index');
         Route::get('/planbyslug/{slug}', 'PlanController@planbyslug');
         Route::get('/braintree/token', 'BraintreeTokenController@index');
     });

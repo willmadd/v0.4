@@ -166,6 +166,28 @@ class AuthController extends Controller
         ]);
     }
 
+    public function updateAllUserDetails(Request $request)
+    {
+        $user = $request->post('user');
+
+
+            $newPlanLimit =  DB::table('plans')->where('id', $user['api'])->value('monthly_limit');
+
+            DB::table('users')
+            ->where('id', $user['id'])
+            ->update(['address_1' => $user['address_1'], 'address_2' =>$user['address_2'] ,'city' => $user['city'], 'country'=> $user['country'],'agencyname' => $user['agencyname'],'email' => $user['email'], 'phone' => $user['phone'], 'name' => $user['name']]);
+
+                $user = DB::table('users')->where('id', $user['id'])->first();
+
+ 
+
+
+
+        return response()->json([
+            'user' => $user,
+        ]);
+    }
+
     public function gettoken($id)
     {
         $token = DB::table('users')->where('id', $id)->value('access');
