@@ -72,6 +72,14 @@ class PnrApiController extends Controller
             //condense spaces and tabs to single space
             $pnrLine = preg_replace('/\h+/', ' ', $pnrLine);
             
+            //search for 5 numbers together in first bit of pnr e.g. G37801 and put a space to get G3 7801
+            if(preg_match('/[0-9]{5}/', substr($pnrLine, 0, 10))){
+                preg_match('/[0-9]{5}/', $pnrLine, $matches, PREG_OFFSET_CAPTURE);
+                $offset = $matches[0][1];
+                $test=$matches[0];
+                $pnrLine = substr_replace( $pnrLine, " ", $offset+1, 0 );
+            }
+
             //find names
             $names = $this->getNames($pnrLine);
 

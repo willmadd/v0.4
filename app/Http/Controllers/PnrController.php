@@ -25,9 +25,9 @@ class PnrController extends Controller
         $pnr = trim(preg_replace("~\s*\R\s*~", "\n", $pnr));
         //replace double linebreaks with single line breaks
         $pnr = str_replace("\r\n\r\n","\r\n",$pnr);
-
-        
         $pnr = explode("\n", $pnr);
+
+
 
 
         
@@ -44,6 +44,16 @@ class PnrController extends Controller
             $pnrLine = str_replace('*', " ", substr($pnrLine, 0,20)).substr($pnrLine, 20);
             //condense spaces and tabs to single space
             $pnrLine = preg_replace('/\h+/', ' ', $pnrLine);
+            
+            //search for 5 numbers together in first bit of pnr e.g. G37801 and put a space to get G3 7801
+            if(preg_match('/[0-9]{5}/', substr($pnrLine, 0, 10))){
+                preg_match('/[0-9]{5}/', $pnrLine, $matches, PREG_OFFSET_CAPTURE);
+                $offset = $matches[0][1];
+                $test=$matches[0];
+                $pnrLine = substr_replace( $pnrLine, " ", $offset+1, 0 );
+            }
+            
+            
             //find names
             $names = $this->getNames($pnrLine);
 
@@ -112,7 +122,7 @@ class PnrController extends Controller
                     "duration" => $this->getFlightDuration($departureDateTime['string'], $departureAirportQuery->timezone, $arrivalDateTime['string'], $arrivalAirportQuery->timezone),
                     "distance" => $this->getFlightDistance($departureAirportQuery->longitude, $departureAirportQuery->latitude, $arrivalAirportQuery->longitude, $arrivalAirportQuery->latitude),
                     "svg-logo-high-res" => "https://www.pnrconverter.com/images/airlines/".strtolower($iatacode).".svg",
-                    "png-logo-low-res" => "https://www.pnrconverter.com/images/airlines/png/150/".strtolower($iatacode).".png",
+                    "png-logo-low-res" => "https://www.pnrconverter.com/images/airlines/png/150/".strtolower($iatacode).".png"
                 );
 
     
