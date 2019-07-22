@@ -7,18 +7,20 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 
-class SignupActivate extends Notification
+class PasswordResetRequest extends Notification
 {
     use Queueable;
+
+    protected $token;
 
     /**
      * Create a new notification instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct($token)
     {
-        //
+        $this->token = $token;
     }
 
     /**
@@ -40,15 +42,12 @@ class SignupActivate extends Notification
      */
     public function toMail($notifiable)
     {
-        $baseUrl = config('app.url');
-        $url = $baseUrl.'/signup/activate/'.$notifiable->activation_token;
+        $url = url('/passwordreset/'.$this->token);
         return (new MailMessage)
-            ->subject('Confirm your PNR Converter account')
-            ->line('Thanks for signing up to PNR Converter! Please click the button below to activate your account')
-            ->action('Confirm Account', url($url))
-            ->line('Thank you for using PNR Converter!');
+            ->line('You are receiving this email because we received a password reset request for your account.')
+            ->action('Reset Password', url($url))
+            ->line('If you did not request a password reset, no further action is required.');
     }
-    
 
     /**
      * Get the array representation of the notification.

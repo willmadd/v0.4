@@ -7,7 +7,7 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 
-class SignupActivate extends Notification
+class PasswordResetSuccess extends Notification
 {
     use Queueable;
 
@@ -40,15 +40,11 @@ class SignupActivate extends Notification
      */
     public function toMail($notifiable)
     {
-        $baseUrl = config('app.url');
-        $url = $baseUrl.'/signup/activate/'.$notifiable->activation_token;
         return (new MailMessage)
-            ->subject('Confirm your PNR Converter account')
-            ->line('Thanks for signing up to PNR Converter! Please click the button below to activate your account')
-            ->action('Confirm Account', url($url))
-            ->line('Thank you for using PNR Converter!');
+        ->line('Your password has been successfully changed.')
+        ->line('If you have just change password, no further action is required.')
+        ->line('If you did not change password, protect your account.');
     }
-    
 
     /**
      * Get the array representation of the notification.

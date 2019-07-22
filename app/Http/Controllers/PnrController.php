@@ -236,15 +236,20 @@ class PnrController extends Controller
                     }
 
                 }
+                // this below line works, but dons't recognise AI 127   05AUG 1 HYDDEL  HK1   810P     855P1110P      correctly
+                // preg_match_all('/[0-9]{3,4}(A|P|N)|(\b[0-9]{4}\b)|(\b[0-9]{2}:[0-9]{2}\b)/', substr($flightLine, 10, 70), $timematches, PREG_SET_ORDER);
+                preg_match_all('/(?<=\s|[APN])[0-9]{3,4}(A|P|N)(?=\s|\d|\b)|(\b[0-9]{4}\b)|(\b[0-9]{2}:[0-9]{2}\b)/', substr($flightLine, 10, 70), $timematches, PREG_SET_ORDER);
+                if (count($timematches)===3){
+                    array_shift($timematches);
+                }
 
-                preg_match_all('/[0-9]{3,4}(A|P|N)|(\b[0-9]{4}\b)|(\b[0-9]{2}:[0-9]{2}\b)/', substr($flightLine, 10, 70), $timematches, PREG_SET_ORDER);
-            
                 // print_r($timematches);
 
                 // if ($timematches[2][0]) {
                 //     array_splice($timematches, 0, 1);
                 // }
-            
+        
+
                 $departure_time = $timematches[0][0];
                 $arrival_time = $timematches[1][0];
             
