@@ -12,14 +12,11 @@ class StripeSubscriptionController extends Controller
 {
     public function create(Request $request, Plan $plan)
     {
-
-        $data = $request->post('data');
-        $user_id = $data['user_id'];
-        $token = $data['token'];
-        $amount = $data['amount'];
-        $plan = Plan::findOrFail($data['plan']);
+        $user_id = $request['user_id'];
+        $token = $request['stripeToken'];
+        $amount = $request['amount'];
+        $plan = Plan::findOrFail($request['plan']);
         $user = User::findOrFail($user_id);
-        // $nonce = $data['nonce'];
         try {
         $user->newSubscription('main', $plan['stripe_plan'])->create($token['id']);
         }catch(\Stripe\Error\Card $e){
@@ -47,6 +44,7 @@ class StripeSubscriptionController extends Controller
             'amount' => $amount,
             'user_id' => $user_id,
             'user' => $user,
+            'reqest' => $request->all(),
             // 'plan passed to new sub'=>$plan['braintree_plan']
         ], 200);
 
@@ -54,19 +52,21 @@ class StripeSubscriptionController extends Controller
 
     public function update(Request $request, Plan $plan)
     {
-        $data = $request->post('data');
-        $plan = Plan::findOrFail($data['plan']);
-        $user_id = $data['user_id'];
+        $plan = Plan::findOrFail($request['plan']);
+        $user_id = $request['user_id'];
         $user = User::findOrFail($user_id);
 
         $user->subscription('main')->swap($plan['stripe_plan']);
+
+        return response()->json([
+            'user' => $user,
+        ], 200);
 
     }
 
     public function cancel(Request $request, Plan $plan)
     {
-        $data = $request->post('data');
-        $user_id = $data['user_id'];
+        $user_id = $request['user_id'];
         $user = User::findOrFail($user_id);
         $user->subscription('main')->cancel();
 
@@ -88,8 +88,7 @@ class StripeSubscriptionController extends Controller
     public function getSubscriptionRenewDate(Request $request)
     {
 
-        $data = $request->post('data');
-        $user_id = $data['user_id'];
+        $user_id = $request['user_id'];
         $user = User::findOrFail($user_id);
         $sub = $user->subscription('main')->asStripeSubscription();
 
@@ -152,4 +151,23 @@ class StripeSubscriptionController extends Controller
            ]);
    }
 
+   public function updatecard(Request $request)
+   {
+       $token = $request['stripeToken'];
+       $user_id = $request['user_id'];
+
+       $user = User::findOrFail($user_id);
+
+       $user->updateCard($token);
+       return response()->json([
+        'user' => $user,
+    ], 200);
+  }
+
 }
+
+
+
+
+
+

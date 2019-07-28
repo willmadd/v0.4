@@ -134,6 +134,9 @@ class PnrApiController extends Controller
                 $times = $this->getTimeAndDate($pnrLine);
                 $arrivalDateTime = $times['arrival'];
                 $departureDateTime = $times['departure'];
+                $distance=$this->getFlightDistance($departureAirportQuery->longitude, $departureAirportQuery->latitude, $arrivalAirportQuery->longitude, $arrivalAirportQuery->latitude);
+                $duration = $this->getFlightDuration($departureDateTime['string'], $departureAirportQuery->timezone, $arrivalDateTime['string'], $arrivalAirportQuery->timezone);
+                $c02 = $this->calculcatec02($distance, $bookingCabin);
                 
                 $flightLineOutput= Array(
                     'flightNo' => $this->getFlightNo($pnrLine),
@@ -146,8 +149,9 @@ class PnrApiController extends Controller
                     "departure" => $departureDateTime,
                     "arrival" => $arrivalDateTime,
                     "transit_time" => (object) array(),
-                    "duration" => $this->getFlightDuration($departureDateTime['string'], $departureAirportQuery->timezone, $arrivalDateTime['string'], $arrivalAirportQuery->timezone),
-                    "distance" => $this->getFlightDistance($departureAirportQuery->longitude, $departureAirportQuery->latitude, $arrivalAirportQuery->longitude, $arrivalAirportQuery->latitude),
+                    "duration" => $duration,
+                    "distance" => $distance,
+                    "co2" => $c02,
                     "svg-logo-high-res" => "https://www.pnrconverter.com/images/airlines/".strtolower($iatacode).".svg",
                     "png-logo-low-res" => "https://www.pnrconverter.com/images/airlines/png/150/".strtolower($iatacode).".png",
                 );
@@ -194,7 +198,7 @@ class PnrApiController extends Controller
     }
 
     protected function getBookingClass($flightLine){
-        preg_match('/\d[A-Z]\s|\s[A-Z]\s/', $flightLine, $matches);//searched for single letter followed by a space
+        preg_match('/(?<=(\d|\s))([A-Z])(?=\s[0-9]{2}[A-Z]{3})/', substr($flightLine, 0, 23), $matches);//searched for single letter followed by a space
         if($matches){
             $matches[0] = preg_replace("/[0-9]+/", "", $matches[0]);
             return trim($matches[0]);
@@ -264,7 +268,10 @@ class PnrApiController extends Controller
 
                 }
 
-                preg_match_all('/[0-9]{3,4}(A|P|N)|(\b[0-9]{4}\b)|(\b[0-9]{2}:[0-9]{2}\b)/', substr($flightLine, 10, 70), $timematches, PREG_SET_ORDER);
+                preg_match_all('/(?<=\s|[APN])[0-9]{3,4}(A|P|N)(?=\s|\d|\b)|(\b[0-9]{4}\b)|(\b[0-9]{2}:[0-9]{2}\b)/', substr($flightLine, 10, 70), $timematches, PREG_SET_ORDER);
+                if (count($timematches)===3){
+                    array_shift($timematches);
+                }
             
                 // print_r($timematches);
 
@@ -466,6 +473,71 @@ class PnrApiController extends Controller
         }else{
             return null;
         }
-      }
+    }
+
+    protected function calculcatec02($distance, $bookingCabin)
+    {   
+        $km = $distance['km'];
+        $co2_per_km_rf;
+        $co2_per_km_non_rf;
+        if($km < 2000){
+            switch ($bookingCabin){
+                case "First":
+                $co2_per_km_rf = 0.67376;
+                $co2_per_km_non_rf = 0.34912;
+                break;
+    
+                case "Business":
+                $co2_per_km_rf = 0.24767;
+                $co2_per_km_non_rf = 0.13091;
+                break;
+    
+                case "Premium Economy":
+                $co2_per_km_rf = 0.21055;
+                $co2_per_km_non_rf = 0.1113125;
+                break;
+
+                case "Economy":
+                $co2_per_km_rf = 0.16508;
+                $co2_per_km_non_rf = 0.08728;
+                break;
+    
+                default:
+                $co2_per_km_rf = 0.16844;
+                $co2_per_km_non_rf = 0.08905;
+            }
+        }else{
+            switch ($bookingCabin){
+                case "First":
+                $co2_per_km_rf = 0.58711;
+                $co2_per_km_non_rf = 0.31039;
+                break;
+    
+                case "Business":
+                $co2_per_km_rf = 0.42565;
+                $co2_per_km_non_rf = 0.22503;
+                break;
+    
+                case "Premium Economy":
+                $co2_per_km_rf = 0.23484;
+                $co2_per_km_non_rf = 0.12415;
+                break;
+
+                case "Economy":
+                $co2_per_km_rf = 0.14678;
+                $co2_per_km_non_rf = 0.07761;
+                break;
+    
+                default:
+                $co2_per_km_rf = 0.10131;
+                $co2_per_km_non_rf = 0;
+                }
+            }
+        $carbon = Array(
+            'co2' => $co2_per_km_non_rf*$km,
+            'co2_with_environmental_impact' =>$co2_per_km_rf*$km,
+        );
+        return $carbon;
+    }
 }
 

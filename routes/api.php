@@ -21,7 +21,7 @@ Route::post('/payment', 'PaymentController@subscription');
 
 Route::group([
     'prefix' => 'auth',
-    // 'middleware' => 'throttle:20',
+    'middleware' => 'throttle:20',
 ], function () {
     Route::post('login', 'AuthController@login');
 });
@@ -33,15 +33,15 @@ Route::group([
     Route::post('signup', 'AuthController@signup');
     Route::get('signup/activate/{token}', 'AuthController@signupActivate');
     Route::post('/subscription', 'SubscriptionController@create');
-    Route::post('/cancelsubscription', 'StripeSubscriptionController@cancel');
-    Route::post('/updatesubscription', 'StripeSubscriptionController@update');
-    Route::post('/stripesubscription', 'StripeSubscriptionController@create');
-    Route::post('/getnextpaymentdate', 'StripeSubscriptionController@getSubscriptionRenewDate');
     Route::get('plans', 'PlanController@index');
     
     Route::group([
         'middleware' => 'auth:api'
     ], function() {
+        Route::post('/stripesubscription', 'StripeSubscriptionController@create');
+        Route::post('/cancelsubscription', 'StripeSubscriptionController@cancel');
+        Route::post('/updatesubscription', 'StripeSubscriptionController@update');
+        Route::post('/getnextpaymentdate', 'StripeSubscriptionController@getSubscriptionRenewDate');
         Route::get('logout', 'AuthController@logout');
         Route::get('user', 'AuthController@user');
         Route::put('update', 'AuthController@update');
@@ -52,6 +52,7 @@ Route::group([
         Route::put('contactusmail', 'AuthController@contactus');
         Route::get('/getinvoices/{user_id}', 'StripeSubscriptionController@getInvoices');
         Route::get('/getinvoice/{user_id}/{invoice_id}', 'StripeSubscriptionController@view_invoice');
+        Route::post('/updatecard' , 'StripeSubscriptionController@updatecard');
     });
 });
 
