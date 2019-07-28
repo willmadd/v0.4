@@ -90,12 +90,21 @@ class StripeSubscriptionController extends Controller
 
         $user_id = $request['user_id'];
         $user = User::findOrFail($user_id);
-        $sub = $user->subscription('main')->asStripeSubscription();
 
-        return response()->json([
-            'cancel_at_period_end' => $sub['cancel_at_period_end'],
-            'next_bill_due' => $sub['current_period_end']
-        ], 200);
+        if($user->hasStripeId()){
+            $sub = $user->subscription('main')->asStripeSubscription();
+            return response()->json([
+                'cancel_at_period_end' => $sub['cancel_at_period_end'],
+                'next_bill_due' => $sub['current_period_end']
+            ], 200);
+        }else{
+            return response()->json([
+                'cancel_at_period_end' => null,
+                'next_bill_due' => null
+            ], 200);
+        }
+
+        
     }
 
     public function getInvoices($user_id)
@@ -104,7 +113,6 @@ class StripeSubscriptionController extends Controller
         // $sub = $user->subscription('main')->asStripeSubscription();
 
         if($user->hasStripeId()) {
-     
             $invoices = $user->invoices();
         } else {
             $invoices = [];

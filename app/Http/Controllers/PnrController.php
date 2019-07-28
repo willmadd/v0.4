@@ -509,8 +509,8 @@ class PnrController extends Controller
                 }
             }
         $carbon = Array(
-            'co2' => $co2_per_km_non_rf*$km,
-            'co2_with_environmental_impact' =>$co2_per_km_rf*$km,
+            'co2' => round(($co2_per_km_non_rf*$km)/100, 2),
+            'co2_with_environmental_impact' =>round(($co2_per_km_rf*$km)/100, 2)
         );
         return $carbon;
     }
