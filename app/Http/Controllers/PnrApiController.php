@@ -534,8 +534,8 @@ class PnrApiController extends Controller
                 }
             }
         $carbon = Array(
-            'co2' => round(($co2_per_km_non_rf*$km)/100, 2),
-            'co2_w_environmental_impact' =>round(($co2_per_km_rf*$km)/100, 2)
+            'co2' => number_format(($co2_per_km_non_rf*$km)/100, 2),
+            'co2_w_environmental_impact' =>number_format(($co2_per_km_rf*$km)/100, 2)
         );
         return $carbon;
     }
