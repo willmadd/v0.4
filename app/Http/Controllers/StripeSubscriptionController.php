@@ -77,11 +77,13 @@ class StripeSubscriptionController extends Controller
         ->where('id', $user_id)
         ->update(['api' => $user['api'], 'limit'=>$newPlanLimit]);
 
-            $user = DB::table('users')->where('id', $user['id'])->first();
+            $newuser = DB::table('users')->where('id', $user['id'])->first();
 
 
         return response()->json([
-            'user' => $user
+            'user' => $user,
+            'user new api' => $user['api'],
+            'newuser' => $newuser
         ], 200);
     }
 
