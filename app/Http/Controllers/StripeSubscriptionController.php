@@ -81,9 +81,7 @@ class StripeSubscriptionController extends Controller
 
 
         return response()->json([
-            'user' => $user,
-            'user new api' => $user['api'],
-            'newuser' => $newuser
+            'user' => $newuser
         ], 200);
     }
 
