@@ -115,6 +115,10 @@ class PnrApiController extends Controller
                 $departureAirportQuery = DB::table('airportdata')->select('airportname','cityname', 'countryname', 'airportcode', 'latitude', 'longitude', 'timezone')->where('airportcode', $departure)->first();
                 $arrivalAirportQuery = DB::table('airportdata')->select('airportname','cityname', 'countryname', 'airportcode', 'latitude', 'longitude', 'timezone')->where('airportcode', $arrival)->first();
       
+                $departureAirportQuery->{"timezoneshort"} = $this->timezone_abbr_from_name($departureAirportQuery->timezone);
+                $arrivalAirportQuery->{"timezoneshort"} = $this->timezone_abbr_from_name($arrivalAirportQuery->timezone);
+//
+
                 if($bookingClass){
                     $bookingCabin = $airlineQuery->$bookingClass;
                 }else{
@@ -538,6 +542,12 @@ class PnrApiController extends Controller
             'co2_with_environmental_impact' =>number_format(($co2_per_km_rf*$km)/100, 2)
         );
         return $carbon;
+    }
+
+    function timezone_abbr_from_name($timezone_name){
+        $dateTime = new DateTime(); 
+        $dateTime->setTimeZone(new DateTimeZone($timezone_name)); 
+        return $dateTime->format('T'); 
     }
 }
 
