@@ -19,6 +19,11 @@ class StripeSubscriptionController extends Controller
         $user = User::findOrFail($user_id);
         try {
         $user->newSubscription('main', $plan['stripe_plan'])->create($token['id']);
+
+        DB::table('users')
+        ->where('id', $user_id)
+        ->update(['defaultcurrency'=>$plan['currency']]);
+
         }catch(\Stripe\Error\Card $e){
             $body = $e->getJsonBody();
             $err  = $body['error'];
