@@ -198,7 +198,7 @@ class PnrApiController extends Controller
 
         return response()->json([
             'flightData' => $finalOutput
-        ], 200);
+        ], 200, [], JSON_UNESCAPED_SLASHES);
     }
 
     protected function getBookingClass($flightLine){

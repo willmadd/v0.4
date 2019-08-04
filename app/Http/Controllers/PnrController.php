@@ -89,7 +89,7 @@ class PnrController extends Controller
                 $arrivalAirportQuery = DB::table('airportdata')->select('airportname','cityname', 'countryname', 'airportcode', 'latitude', 'longitude', 'timezone')->where('airportcode', $arrival)->first();
 
                 $departureAirportQuery->{"timezoneshort"} = $this->timezone_abbr_from_name($departureAirportQuery->timezone);
-                $arrivalAirportQuery->{"timezoneshort"} = $this->timezone_abbr_from_name($arrivalAirportQuery->timezone);
+                $departureAirportQuery->{"timezoneshort"} = $this->timezone_abbr_from_name($departureAirportQuery->timezone);
 //
                 if($bookingClass){
                     $bookingCabin = $airlineQuery->$bookingClass;
@@ -170,7 +170,7 @@ class PnrController extends Controller
 
         return response()->json([
             'flightData' => $finalOutput
-        ], 200);
+        ], 200, [], JSON_UNESCAPED_SLASHES);
     }
 
     protected function getBookingClass($flightLine){
