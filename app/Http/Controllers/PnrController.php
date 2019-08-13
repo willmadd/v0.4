@@ -295,12 +295,25 @@ class PnrController extends Controller
                     $arrival_date = $departure_date;
                 }
 
+                // inital working code below
+
+            // $departure_time = Array (
+            // 'string' => date('Y-m-d H:i', strtotime($departure_time . ' ' . $departure_date)),
+            // 'day' => date('D', strtotime($departure_time . ' ' . $departure_date)),
+            // );
+
+            $newDepTime = new DateTime($departure_time . ' ' . $departure_date);
+            
             $departure_time = Array (
-            'string' => date('Y-m-d H:i', strtotime($departure_time . ' ' . $departure_date)),
-            'day' => date('D', strtotime($departure_time . ' ' . $departure_date)),
-            );
+                // 'string' => date('Y-m-d H:i', strtotime($departure_time . ' ' . $departure_date)),
+                'day' => date('D', strtotime($departure_time . ' ' . $departure_date)),
+                'string' => $newDepTime->format('Y-m-d H:i')
+                );
 
             
+
+
+
         
         // set arrival date
         
@@ -328,11 +341,25 @@ class PnrController extends Controller
         //         $arrival_date = date('Y-m-d', strtotime($arrival_date));
         //     }
         
-            $arrival_time = Array (
-            'string' => date('Y-m-d H:i', strtotime($arrival_time . ' ' . $arrival_date)),
-            'day' => date('D', strtotime($arrival_time . ' ' . $arrival_date)),
+
+// inital working code below
+
+
+            // $arrival_time = Array (
+            // 'string' => date('Y-m-d H:i', strtotime($arrival_time . ' ' . $arrival_date)),
+            // 'day' => date('D', strtotime($arrival_time . ' ' . $arrival_date)),
             
-            );
+            // );
+
+            $newArrTime = new DateTime($arrival_time . ' ' . $arrival_date);
+            
+            $arrival_time = Array (
+                // 'string' => date('Y-m-d H:i', strtotime($departure_time . ' ' . $departure_date)),
+                'day' => date('D', strtotime($arrival_time . ' ' . $arrival_date)),
+                'string' => $newArrTime->format('Y-m-d H:i')
+                );
+
+
         
             $timings = array();
             $timings['departure'] = $departure_time;
