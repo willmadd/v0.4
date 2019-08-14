@@ -107,7 +107,7 @@ class PnrController extends Controller
                     }
                 }
 
-                $times = $this->getTimeAndDate($pnrLine);
+                $times = $this->getTimeAndDate($pnrLine, $departureAirportQuery->timezone, $arrivalAirportQuery->timezone);
                 $arrivalDateTime = $times['arrival'];
                 $departureDateTime = $times['departure'];
                 $distance=$this->getFlightDistance($departureAirportQuery->longitude, $departureAirportQuery->latitude, $arrivalAirportQuery->longitude, $arrivalAirportQuery->latitude);
@@ -216,7 +216,7 @@ class PnrController extends Controller
           return $destinations;
       }
 
-    protected function getTimeAndDate($flightLine)
+    protected function getTimeAndDate($flightLine, $depTimeZone, $arrTimeZone)
     {
         $timings = array();
         $departure_date = null;
@@ -302,12 +302,14 @@ class PnrController extends Controller
             // 'day' => date('D', strtotime($departure_time . ' ' . $departure_date)),
             // );
 
-            $newDepTime = new DateTime($departure_time . ' ' . $departure_date);
+            $newDepTime = new DateTime($departure_time . ' ' . $departure_date, new DateTimeZone($depTimeZone));
             
             $departure_time = Array (
                 // 'string' => date('Y-m-d H:i', strtotime($departure_time . ' ' . $departure_date)),
                 'day' => date('D', strtotime($departure_time . ' ' . $departure_date)),
-                'string' => $newDepTime->format('Y-m-d H:i')
+                'string' => $newDepTime->format('Y-m-d H:i'),
+                'UTC'=> $newDepTime->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:sP'),
+                'tz'=> $depTimeZone,
                 );
 
             
@@ -351,12 +353,14 @@ class PnrController extends Controller
             
             // );
 
-            $newArrTime = new DateTime($arrival_time . ' ' . $arrival_date);
+            $newArrTime = new DateTime($arrival_time . ' ' . $arrival_date, new DateTimeZone($arrTimeZone));
             
             $arrival_time = Array (
                 // 'string' => date('Y-m-d H:i', strtotime($departure_time . ' ' . $departure_date)),
                 'day' => date('D', strtotime($arrival_time . ' ' . $arrival_date)),
-                'string' => $newArrTime->format('Y-m-d H:i')
+                'string' => $newArrTime->format('Y-m-d H:i'),
+                'UTC'=> $newArrTime->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:sP'),
+                'tz'=> $arrTimeZone,
                 );
 
 
