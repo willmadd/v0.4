@@ -308,8 +308,10 @@ class PnrController extends Controller
                 // 'string' => date('Y-m-d H:i', strtotime($departure_time . ' ' . $departure_date)),
                 'day' => date('D', strtotime($departure_time . ' ' . $departure_date)),
                 'string' => $newDepTime->format('Y-m-d H:i'),
-                'UTC'=> $newDepTime->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:sP'),
-                'tz'=> $depTimeZone,
+                'hr12'=> $newDepTime->format('g:i a'),
+                'hr24'=> $newDepTime->format('H:i'),
+                'UTC'=>$newDepTime->setTimezone(new DateTimeZone("UTC"))->format('Y-m-d H:i:sP'),
+                'tz'=>$depTimeZone
                 );
 
             
@@ -359,8 +361,10 @@ class PnrController extends Controller
                 // 'string' => date('Y-m-d H:i', strtotime($departure_time . ' ' . $departure_date)),
                 'day' => date('D', strtotime($arrival_time . ' ' . $arrival_date)),
                 'string' => $newArrTime->format('Y-m-d H:i'),
-                'UTC'=> $newArrTime->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:sP'),
-                'tz'=> $arrTimeZone,
+                'hr12'=> $newArrTime->format('g:i a'),
+                'hr24'=> $newArrTime->format('H:i'),
+                'UTC'=>$newArrTime->setTimezone(new DateTimeZone("UTC"))->format('Y-m-d H:i:sP'),
+                'tz'=>$arrTimeZone
                 );
 
 
