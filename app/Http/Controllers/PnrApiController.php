@@ -141,12 +141,17 @@ class PnrApiController extends Controller
                 $distance=$this->getFlightDistance($departureAirportQuery->longitude, $departureAirportQuery->latitude, $arrivalAirportQuery->longitude, $arrivalAirportQuery->latitude);
                 $duration = $this->getFlightDuration($departureDateTime['string'], $departureAirportQuery->timezone, $arrivalDateTime['string'], $arrivalAirportQuery->timezone);
                 $c02 = $this->calculcatec02($distance, $bookingCabin);
-                
+                $flightNo = $this->getFlightNo($pnrLine);
+                $codeshare = false;
+                if (strlen($flightNo)===4){
+                   $codeshare = true; 
+                };
                 $flightLineOutput= Array(
-                    'flightNo' => $this->getFlightNo($pnrLine),
+                    'flightNo' => $flightNo,
                     'iatacode'=>$iatacode,
                     "name" => $airlineQuery->airline_name,
                     "operated_by"=>$airlineQuery->airline_name,
+                    "code_share"=>$codeshare,
                     'cabin'=>  $bookingCabin,
                     "class" => $bookingClass,
                     "aircraft"=>$aircraft,
