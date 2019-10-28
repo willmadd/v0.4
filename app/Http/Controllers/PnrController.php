@@ -36,6 +36,10 @@ class PnrController extends Controller
         $finalOutput['names'] = Array();
         $finalOutput['flights'] = Array();
 
+        $finalOutput['meta'] = Array(
+            "pnr"=>$this->getPNR($pnr),  
+        );
+
 
         $i = 0;
         foreach($pnr as $pnrLine)
@@ -461,7 +465,7 @@ class PnrController extends Controller
       }
 
       protected function getNames($flightLine){
-        if(preg_match('/\b[0-9]{1}[A-Z]{4,}\/\D+\b/', $flightLine)){
+        if(preg_match('/\b\d{1}\.\w{3,}\/\D+[\D]\b/', $flightLine)){
             return $flightLine;
         }else{
             return null;
@@ -558,6 +562,24 @@ class PnrController extends Controller
         $dateTime = new DateTime(); 
         $dateTime->setTimeZone(new DateTimeZone($timezone_name)); 
         return $dateTime->format('T'); 
+    }
+
+
+    function getPNR($PNR){
+        $firstTwoLines = array_slice($PNR, 0, 2);
+        $finalPnr = null;
+        foreach($PNR as $pnrLine)
+        {
+            //remove any * that appear before position 20 in a pnr
+            $pnrLine = str_replace('*', " ", substr($pnrLine, 0,20)).substr($pnrLine, 20);
+            //condense spaces and tabs to single space
+            $pnrLine = preg_replace('/\h+/', ' ', $pnrLine);
+
+            if (preg_match('/^RP\/\w+\/\w+\s\w+\/.+\s\w{6}$/', $pnrLine) && !$finalPnr){
+                preg_match('/\w{6}$/', $pnrLine, $finalPnr);
+            }
+        }
+        return $finalPnr;
     }
 
 }

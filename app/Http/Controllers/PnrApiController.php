@@ -41,28 +41,35 @@ class PnrApiController extends Controller
 
     private function convertPnr(Request $request, $user)
     {
-        //get pnr post field
-        $pnr = $request->post('pnr');
-        //replace special characters
-        $pnr = str_replace(['Â', '$', '.#', '.'], " ", $pnr);
-        $pnr = trim(preg_replace("~\s*\R\s*~", "\n", $pnr));
-        //replace double linebreaks with single line breaks
-        $pnr = str_replace("\r\n\r\n","\r\n",$pnr);
-
-
-        $pnr = explode("\n", $pnr);
-
-
+        
+        
         
         //define final output as an array
         $finalOutput = Array();
         $finalOutput['info'] = Array([
             'agencyName' => $user['agencyname'],
             'requestsLeft' => $user['limit']-$user['requests'],
-        ]);
-        $finalOutput['names'] = Array();
-        $finalOutput['flights'] = Array();
+            ]);
+            $finalOutput['names'] = Array();
+            $finalOutput['flights'] = Array();
+            
+            
+            //get pnr post field
+            $pnr = $request->post('pnr');
+            //replace special characters
+            $pnr = str_replace(['Â', '$', '.#', '.'], " ", $pnr);
+            $pnr = trim(preg_replace("~\s*\R\s*~", "\n", $pnr));
+            //replace double linebreaks with single line breaks
+            $pnr = str_replace("\r\n\r\n","\r\n",$pnr);
+            
+            
+            $pnr = explode("\n", $pnr);
+            
+            $finalOutput['meta'] = Array(
+                "pnr"=>$this->getPNR($pnr),  
+            );
 
+            $allNames = Array();
 
         $i = 0;
         foreach($pnr as $pnrLine)
@@ -82,9 +89,10 @@ class PnrApiController extends Controller
 
             //find names
             $names = $this->getNames($pnrLine);
-
+            
             if($names){
-                array_push($finalOutput['names'], $names);
+                $allNames = array_merge($allNames, $names);
+                $finalOutput['names'] = $allNames;
                 $names = null;
             }
 
@@ -162,7 +170,7 @@ class PnrApiController extends Controller
                     "distance" => $distance,
                     "co2" => $c02,
                     "svg-logo-high-res" => "https://www.pnrconverter.com/images/airlines/".strtolower($iatacode).".svg",
-                    "png-logo-low-res" => "https://www.pnrconverter.com/images/airlines/png/150/".strtolower($iatacode).".png",
+                    "png-logo-low-res" => "https://www.pnrconverter.com/images/airlines/png/150/".strtolower($iatacode).".png"
                 );
 
     
@@ -200,6 +208,7 @@ class PnrApiController extends Controller
 
             $j++;
         }
+
 
         return response()->json([
             'flightData' => $finalOutput
@@ -457,8 +466,22 @@ class PnrApiController extends Controller
       }
 
       protected function getNames($flightLine){
-        if(preg_match('/\b[0-9]{1}[A-Z]{4,}\/\D+\b/', $flightLine)){
-            return $flightLine;
+          
+          if(preg_match('/\b\d{1}\s\w{3,}\/[A-Z\s]+\b/', $flightLine)){
+            preg_match_all('/\b\d{1}\s\w{3,}\/[A-Z\s]+\b/', $flightLine, $names);
+            $allLineNames = Array();
+            foreach($names[0] as &$name){
+                $name = preg_replace('/\d\s/', '', $name);
+                // echo $name;
+                $nameData = Array(
+                    'fullName' => $name
+                );
+                array_push($allLineNames, $nameData);
+
+                // array_push($allNames, $nameData);
+
+            }
+            return $allLineNames;
         }else{
             return null;
         }
@@ -553,6 +576,23 @@ class PnrApiController extends Controller
         $dateTime = new DateTime(); 
         $dateTime->setTimeZone(new DateTimeZone($timezone_name)); 
         return $dateTime->format('T'); 
+    }
+
+    function getPNR($PNR){
+        $firstTwoLines = array_slice($PNR, 0, 2);
+        $finalPnr = null;
+        foreach($PNR as $pnrLine)
+        {
+            //remove any * that appear before position 20 in a pnr
+            $pnrLine = str_replace('*', " ", substr($pnrLine, 0,20)).substr($pnrLine, 20);
+            //condense spaces and tabs to single space
+            $pnrLine = preg_replace('/\h+/', ' ', $pnrLine);
+
+            if (preg_match('/^RP\/\w+\/\w+\s\w+\/.+\s\w{6}$/', $pnrLine) && !$finalPnr){
+                preg_match('/\w{6}$/', $pnrLine, $finalPnr);
+            }
+        }
+        return $finalPnr;
     }
 }
 
